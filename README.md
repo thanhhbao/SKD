@@ -1,6 +1,6 @@
 # My Training Repository
 
-This repository is a modified version of the original [SKD: Skin Cancer Detection Framework](https://github.com/tinlamthanh/SKD) for training purposes. It contains customized code for learning and experimentation. **Please do not clone this repository directly.** If you wish to use the original project, visit the main repository: [SKD Repository](https://github.com/tinlamthanh/SKD).
+This repository is a modified version for training purposes. It contains customized code for learning and experimentation. **Please do not clone this repository directly.** If you wish to use the original project, visit the main repository: [SKD Repository](https://github.com/tinlamthanh/SKD).
 
 ## About
 
