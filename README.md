@@ -6,14 +6,3 @@ This repository is a modified version for training purposes. It contains customi
 
 The SKD framework provides a modular, configurable pipeline for skin cancer detection and other medical image classification tasks, with a focus on efficient metrics logging and experiment tracking. This repository includes my custom modifications for educational purposes.
 
-## Installation
-
-### Requirements
-- Python 3.8+
-- CUDA-compatible GPU (recommended)
-
-### Setup
-1. Clone the original repository:
-   ```bash
-   git clone https://github.com/tinlamthanh/SKD
-   cd SKD
