@@ -5,7 +5,8 @@ import torch
 from torch.utils.data import DataLoader
 import lightning as L
 from torchvision.transforms import Compose, RandomResizedCrop, ToTensor, Normalize
-
+from torch.utils.data import WeightedRandomSampler
+import numpy as np
 from datasets.registry import build_dataset
 
 class DataLoaderWrapper(L.LightningDataModule):
@@ -59,12 +60,31 @@ class DataLoaderWrapper(L.LightningDataModule):
     del examples["image"]
     return examples
 
-  def train_dataloader(self):
+  #def train_dataloader(self):
     """
     Get train dataloader.
     """
     print(f'Loading train dataloader: {len(self.dataset["train"])} samples')
-    return DataLoader(self.dataset['train'], batch_size=self.train_batch_size)
+    return DataLoader(self.dataset['train'], batch_size=self.train_batch_size)#
+
+  def train_dataloader(self):
+    """
+    Get train dataloader with WeightedRandomSampler.
+    """
+    train_dataset = self.dataset['train']
+    
+    # Chuyển one-hot label -> class index
+    labels = [torch.argmax(train_dataset[i]['label']).item() for i in range(len(train_dataset))]
+    labels_tensor = torch.tensor(labels)
+
+    class_sample_count = torch.tensor([(labels_tensor == t).sum() for t in torch.unique(labels_tensor)])
+    weight = 1. / class_sample_count.float()
+    samples_weight = torch.tensor([weight[l] for l in labels])
+
+    sampler = WeightedRandomSampler(weights=samples_weight, num_samples=len(samples_weight), replacement=True)
+
+    print(f'Loading train dataloader with sampler: {len(train_dataset)} samples')
+    return DataLoader(train_dataset, batch_size=self.train_batch_size, sampler=sampler)
 
   def test_dataloader(self):
     """

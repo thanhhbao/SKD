@@ -2,6 +2,25 @@ import torch
 import torchmetrics
 # Removed matplotlib.pyplot and seaborn as they are not needed for console logging
 
+class ConfusionMatrix:
+    def __init__(self, task, num_classes, device):
+      self.metric = torchmetrics.ConfusionMatrix(
+                task=task,
+                num_classes=num_classes
+            ).to(device)
+    
+    def update(self, preds, targets):    
+      # targets = []
+      if len(preds.shape) == 2:
+          return self.metric.update(preds[:,1], targets[:,1])
+      return self.metric.update(preds, targets) 
+
+    def compute(self):
+      return self.metric.compute()  
+
+    def reset(self):
+      return self.metric.reset()             
+
 class MetricsLogger:
     """
     Metrics logging system for tracking model performance metrics
@@ -22,8 +41,8 @@ class MetricsLogger:
             self.metrics[stage] = self._create_metrics_for_stage(config)
 
         # Store predictions and targets for Confusion Matrix computation later
-        self.all_preds = {stage: [] for stage in self.stages} # <-- ĐÃ THÊM LẠI
-        self.all_targets = {stage: [] for stage in self.stages} # <-- ĐÃ THÊM LẠI
+        self.all_preds = {stage: [] for stage in self.stages}
+        self.all_targets = {stage: [] for stage in self.stages}
 
     def _create_metrics_for_stage(self, config):
         """
@@ -69,28 +88,26 @@ class MetricsLogger:
                 average=average
             ).to(self.device)
 
-        # --- Thêm FBeta ---
-        if config.get('include_fbeta', False): # <-- ĐÃ THÊM LẠI LOGIC NÀY
-            fbeta_beta = config.get('fbeta_beta', 1.0)
-            metrics_dict[f'fbeta_{fbeta_beta:.1f}'.replace('.', '')] = torchmetrics.FBetaScore(
-                task=task,
-                num_classes=num_classes,
-                average=average,
-                beta=fbeta_beta
-            ).to(self.device)
+        # --- Removed FBeta ---
+        # if config.get('include_fbeta', False):
+        #     fbeta_beta = config.get('fbeta_beta', 1.0)
+        #     metrics_dict[f'fbeta_{fbeta_beta:.1f}'.replace('.', '')] = torchmetrics.FBetaScore(
+        #         task=task,
+        #         num_classes=num_classes,
+        #         average=average,
+        #         beta=fbeta_beta
+        #     ).to(self.device)
 
         # --- Add Confusion Matrix metric (to be computed and printed) ---
-        if config.get('include_confusion_matrix', False): # <-- ĐÃ THÊM LẠI LOGIC NÀY
-            metrics_dict['confusion_matrix'] = torchmetrics.ConfusionMatrix(
-                task=task,
-                num_classes=num_classes
-            ).to(self.device)
+        if config.get('include_confusion_matrix', False):
+            metrics_dict['confusion_matrix'] = ConfusionMatrix(task, num_classes, self.device)
 
-        # --- Add Score (If it's a custom metric) ---
-        # If 'Score' is a specific custom metric, define its logic here.
-        # For example, if it's just another name for Accuracy:
+        # --- Removed Score ---
         # if config.get('include_score', False):
-        #     metrics_dict['score'] = torchmetrics.Accuracy(task=task, num_classes=num_classes).to(self.device)
+        #     metrics_dict['score'] = torchmetrics.Accuracy(
+        #         task=task,
+        #         num_classes=num_classes
+        #     ).to(self.device)
 
         return metrics_dict
 
@@ -102,8 +119,8 @@ class MetricsLogger:
             raise ValueError(f"Unknown stage: {stage}")
 
         # Store predictions and targets for Confusion Matrix
-        self.all_preds[stage].append(y_pred.detach().cpu()) 
-        self.all_targets[stage].append(y_true.detach().cpu()) 
+        self.all_preds[stage].append(y_pred.detach().cpu())
+        self.all_targets[stage].append(y_true.detach().cpu())
 
         # Update each metric
         for _, metric in self.metrics[stage].items():
@@ -130,7 +147,7 @@ class MetricsLogger:
             computed_scalar_metrics[metric_name] = value.item() # Store scalar value
 
         # --- Compute and Print Confusion Matrix directly to console ---
-        if 'confusion_matrix' in self.metrics[stage]: 
+        if 'confusion_matrix' in self.metrics[stage]:
             # Concatenate all stored tensors for CM
             all_preds_stage = torch.cat(self.all_preds[stage]).to(self.device)
             all_targets_stage = torch.cat(self.all_targets[stage]).to(self.device)
@@ -139,8 +156,16 @@ class MetricsLogger:
             cm_metric.update(all_preds_stage, all_targets_stage)
             confusion_matrix_tensor = cm_metric.compute()
 
-            # Print Confusion Matrix to console
-            print(f"\n{prefix}{stage}_confusion_matrix:\n{confusion_matrix_tensor.int().cpu().numpy()}")
+            # Convert CM to numpy array
+            cm_array = confusion_matrix_tensor.int().cpu().numpy()
+
+            # Log each value in the confusion matrix (e.g., to CSVLogger/TensorBoard scalars)
+            for i in range(cm_array.shape[0]):
+                for j in range(cm_array.shape[1]):
+                    logger_fn(f"{prefix}{stage}_confmat_{i}{j}", cm_array[i, j], prog_bar=False)
+
+            # Optional: still print to console for debugging/quick view
+            print(f"\n{prefix}{stage}_confusion_matrix:\n{cm_array}")
 
             # Reset CM metric after computation
             cm_metric.reset()
@@ -166,5 +191,5 @@ class MetricsLogger:
         for metric in self.metrics[stage].values():
             metric.reset()
         # Reset stored predictions and targets
-        self.all_preds[stage] = [] 
-        self.all_targets[stage] = [] 
+        self.all_preds[stage] = []
+        self.all_targets[stage] = []

@@ -11,6 +11,9 @@ model:
   loss_name: FocalLoss
   lr: 0.001
   device: cuda
+  loss_kwargs:
+    alpha: [0.2, 0.8] # class 0 (negative), class 1 (positive)
+    gamma: 2.0
 
 # Dataset configuration
 data:
@@ -52,3 +55,4 @@ metrics:
   average: macro
   include_precision: true
   include_recall: true
+  include_confusion_matrix: true

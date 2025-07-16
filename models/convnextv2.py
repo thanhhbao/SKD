@@ -16,7 +16,7 @@ class ConvNeXt(nn.Module):
 
   def forward(self, x: torch.Tensor) -> torch.Tensor:
     logits = self.backbone(x)
-    return nn.functional.softmax(logits, dim=1) 
+    return logits #nn.functional.softmax(logits, dim=1) 
 
 @BACKBONE.register()
 class ConvNeXtV2Tiny(ConvNeXt):

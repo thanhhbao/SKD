@@ -59,7 +59,7 @@ class ISIC2018Dataset(Dataset):
     """
     return len(self.df)
   
-  def get_label(self, idx):
+  #def get_label(self, idx):
     label = [1, 0]
     # handle if target_col contains multiple cols (multi-label case)
     if isinstance(self.target_col, list):
@@ -73,7 +73,21 @@ class ISIC2018Dataset(Dataset):
     else: 
       raise Exception(f'Invalid target column. Please check config file.')
 
+    return label#
+  def get_label(self, idx):
+    label = 0
+    if isinstance(self.target_col, list):
+        for tc in self.target_col:
+            if self.df.iloc[idx][tc] > 0:
+                label = 1
+                break
+    elif isinstance(self.target_col, str):
+        label = int(self.df.iloc[idx][self.target_col] > 0)
+    else:
+        raise Exception("Invalid target_col format")
+
     return label
+
 
   def __getitem__(self, idx: int) -> Dict[str, Any]:
     """
@@ -97,7 +111,7 @@ class ISIC2018Dataset(Dataset):
     
     label = self.get_label(idx)
 
-    return {'pixel_values': image, 'label': torch.tensor(label, dtype=torch.float)}
+    return {'pixel_values': image, 'label': torch.tensor(label, dtype=torch.long)} #float
 
 @DATASET_REGISTRY.register()
 def load_isic2018(*args, **kwargs):
