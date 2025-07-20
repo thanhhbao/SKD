@@ -111,7 +111,7 @@ class ISIC2018Dataset(Dataset):
     
     label = self.get_label(idx)
 
-    return {'pixel_values': image, 'label': torch.tensor(label, dtype=torch.long)} #float
+    return {'pixel_values': image, 'label': torch.tensor(label, dtype=torch.float)}
 
 @DATASET_REGISTRY.register()
 def load_isic2018(*args, **kwargs):

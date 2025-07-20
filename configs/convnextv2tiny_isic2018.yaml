@@ -8,17 +8,17 @@ experiment:
 # Model configuration
 model:
   name: ConvNeXtV2Tiny # Tiny, Pico, Nano, Base, Huge
-  loss_name: FocalLoss
-  lr: 0.001
+  loss_name: BinaryCrossEntropyWithLogits
+  lr: 0.00025 # 2.5e-4, scaled cho effective batch=128
+  weight_decay: 0.05 # Thêm weight_decay cho AdamW
   device: cuda
   loss_kwargs:
-    alpha: [0.2, 0.8] # class 0 (negative), class 1 (positive)
-    gamma: 2.0
+    pos_weight: 5.15 # pos_weight cho lớp positive (negative/positive ≈16776/3254)
 
 # Dataset configuration
 data:
   dataset_name: load_isic2018
-  num_classes: 2
+  num_classes: 1 # Đổi sang 1 cho binary classification
   train_batch_size: 32
   test_batch_size: 32
   val_batch_size: 32

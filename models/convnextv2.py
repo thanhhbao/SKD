@@ -10,13 +10,12 @@ class ConvNeXt(nn.Module):
   """
   def __init__(self, model_name: str, num_labels: int):
     super().__init__()
-    self.backbone = timm.create_model(model_name)
-    in_feats = self.backbone.head.fc.in_features
-    self.backbone.head.fc = nn.Linear(in_feats, num_labels)
+    # Sử dụng pretrained=True và set num_classes trực tiếp để load weights đúng và thay head tự động
+    self.backbone = timm.create_model(model_name, pretrained=True, num_classes=num_labels)
 
   def forward(self, x: torch.Tensor) -> torch.Tensor:
     logits = self.backbone(x)
-    return logits #nn.functional.softmax(logits, dim=1) 
+    return logits  # Trả logits, không softmax (phù hợp với BCEWithLogitsLoss)
 
 @BACKBONE.register()
 class ConvNeXtV2Tiny(ConvNeXt):

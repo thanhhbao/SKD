@@ -12,7 +12,7 @@ class ConfusionMatrix:
     def update(self, preds, targets):    
       # targets = []
       if len(preds.shape) == 2:
-          return self.metric.update(preds[:,1], targets[:,1])
+          return self.metric.update(preds.squeeze(1), targets.squeeze(1))  
       return self.metric.update(preds, targets) 
 
     def compute(self):
