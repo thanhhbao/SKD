@@ -13,8 +13,8 @@ model:
   weight_decay: 0.05
   device: cuda
   loss_kwargs:
-    alpha: [0.2, 0.8] # alpha_neg, alpha_pos
-    gamma: 2.0
+    alpha: [0.3, 0.7] # alpha_neg, alpha_pos #0.4 - 0.6
+    gamma: 4.0
 
 # Dataset configuration
 data:
