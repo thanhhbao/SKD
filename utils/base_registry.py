@@ -1,4 +1,4 @@
-from typing import Dict, Type, Optional, Any
+from typing import Dict, Type, Optional, Any, Callable
 
 class Registry:
   """
@@ -8,27 +8,38 @@ class Registry:
     self.name = name
     self._modules: Dict[str, Type[Any]] = {}
 
-  def register(self, module_class: Optional[Type[Any]] = None):
+  def register(self, arg1: Optional[Any] = None) -> Callable:
     """
-    Register a module class.
-    If no module_class is provided, returns a decorator function.
+    Register a module class, supporting custom name.
+    Usage:
+    - @registry.register  # Uses class.__name__
+    - @registry.register('CustomName')  # Uses 'CustomName' as key
     
     Args:
-      module_class: The module class to register
+      arg1: Either the class to register or a string for custom name.
         
     Returns:
-      The module class if used as a decorator, otherwise None
+      Decorator function or the registered class.
     """
     def _register(module_cls: Type[Any]) -> Type[Any]:
-      module_class_name = module_cls.__name__
+      if custom_name:
+        module_class_name = custom_name
+      else:
+        module_class_name = module_cls.__name__
       if module_class_name in self._modules:
         raise ValueError(f"{self.name} {module_class_name} is already registered")
       self._modules[module_class_name] = module_cls
       return module_cls
 
-    if module_class is None:
+    if callable(arg1) and not isinstance(arg1, str):  # @register class Foo (arg1 is class)
+      custom_name = None
+      return _register(arg1)
+    elif isinstance(arg1, str):  # @register('Name') -> return decorator
+      custom_name = arg1
       return _register
-    return _register(module_class)
+    else:  # @register() -> return _register
+      custom_name = None
+      return _register
 
   def get(self, name: str, *args, **kwargs) -> Any:
     """

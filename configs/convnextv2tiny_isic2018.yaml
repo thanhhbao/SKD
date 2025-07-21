@@ -7,22 +7,25 @@ experiment:
 
 # Model configuration
 model:
-  name: ConvNeXtV2Tiny # Tiny, Pico, Nano, Base, Huge
-  loss_name: BinaryCrossEntropyWithLogits
-  lr: 0.00025 # 2.5e-4, scaled cho effective batch=128
-  weight_decay: 0.05 # Thêm weight_decay cho AdamW
+  name: ConvNeXtV2Tiny
+  loss_name: FocalLoss # Đổi sang FocalLoss
+  lr: 0.00025
+  weight_decay: 0.05
   device: cuda
   loss_kwargs:
-    pos_weight: 5.15 # pos_weight cho lớp positive (negative/positive ≈16776/3254)
+    alpha: [0.2, 0.8] # alpha_neg, alpha_pos
+    gamma: 2.0
 
 # Dataset configuration
 data:
   dataset_name: load_isic2018
-  num_classes: 1 # Đổi sang 1 cho binary classification
+  num_classes: 2 # Đổi sang 2 cho FocalLoss (treat binary as 2 classes)
   train_batch_size: 32
   test_batch_size: 32
   val_batch_size: 32
   test_size: 0.2
+  use_weighted_sampler: true
+  class_weights: [0.82, 0.18] # Tỷ lệ inverse của val (negative, positive)
   cache_dir: .cache
   dataset_kwargs:
     preprocessor:
@@ -51,7 +54,7 @@ trainer:
 
 # Metrics configuration
 metrics:
-  task: binary # multiclass, multilabel, binary
+  task: binary # Giữ binary, nhưng metrics sẽ dùng y_pred[:,1] như logits positive
   average: macro
   include_precision: true
   include_recall: true
