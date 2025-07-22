@@ -1,5 +1,6 @@
 from typing import Dict, Type, Optional
 import torch.nn as nn
+import timm
 from utils.base_registry import Registry
 
 class ModelRegistry(Registry):
@@ -18,5 +19,12 @@ class ModelRegistry(Registry):
 # Create global registry instance
 BACKBONE = ModelRegistry() 
 
-def build_model(name, num_labels, **kwargs):
-  return BACKBONE.get_model(name, num_labels, **kwargs)
+def build_model(name, num_classes=2, pretrained=True, **kwargs):
+    if name == 'vit_base_patch16_224':
+        model = timm.create_model(name, pretrained=pretrained, num_classes=num_classes)
+    elif name == 'convnextv2_tiny':
+        model = timm.create_model(name, pretrained=pretrained, num_classes=num_classes)
+    else:
+        raise ValueError(f"Unknown model: {name}")
+    
+    return model

@@ -50,7 +50,7 @@ class CrossEntropy:
 
 @LOSS.register('FocalLoss')
 class FocalLoss:
-    def __init__(self, alpha=1.0, gamma=2.0, reduction='mean'):
+    def __init__(self, alpha=1.0, gamma=4.0, reduction='mean'):
         if isinstance(alpha, (float, int)):
             self.alpha = torch.tensor(alpha, dtype=torch.float32, requires_grad=False)
         elif isinstance(alpha, list):
