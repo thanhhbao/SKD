@@ -26,6 +26,8 @@ def build_model(name, num_classes=2, pretrained=True, **kwargs):
         model = timm.create_model(name, pretrained=pretrained, num_classes=num_classes)
     elif name == 'densenet121':
         model = timm.create_model(name, pretrained=pretrained, num_classes=num_classes)
+    elif name == 'efficientnet_b0':
+        model = timm.create_model(name, pretrained=pretrained, num_classes=num_classes)
     else:
         raise ValueError(f"Unknown model: {name}")
     
