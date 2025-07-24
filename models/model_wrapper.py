@@ -91,3 +91,4 @@ class ModelWrapper(L.LightningModule):
     self.metrics_logger.compute_and_log('test', self.log, prefix='epoch_')
     # Reset metrics
     self.metrics_logger.reset('test') 
+   

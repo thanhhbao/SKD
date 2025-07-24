@@ -9,7 +9,7 @@ experiment:
 model:
   name: edgenext_small
   loss_name: FocalLoss # Đổi sang FocalLoss
-  lr: 0.00025
+  lr: 0.0001
   weight_decay: 0.05
   device: cuda
   loss_kwargs:
@@ -47,7 +47,7 @@ trainer:
   accelerator: gpu
   accumulate_grad_batches: 4
   log_every_n_steps: 30
-  max_epochs: 10
+  max_epochs: 20
   gradient_clip_val: 1
   precision: 16-mixed
   enable_progress_bar: true
@@ -59,3 +59,5 @@ metrics:
   include_precision: true
   include_recall: true
   include_confusion_matrix: true
+  thresholds: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]  
+  metric_priority: f1  # Metric để chọn best (f1, accuracy, precision, recall)
