@@ -40,34 +40,34 @@ class TrainerWrapper:
         average = metrics_config.get('average', 'macro')
 
         model.eval()  # Eval mode
-        all_logits_pos = []  # Logits của class positive
+        all_logits_pos = []
         all_targets = []
 
         with torch.no_grad():
             for batch in val_dataloader:
-                x = batch['pixel_values'].to(model.device)  # Đảm bảo trên device đúng
-                y = batch['label'].cpu().numpy().squeeze()  # Targets 0/1
-                outputs = model(x)  # Logits (batch, 2)
-                logits_pos = outputs[:, 1].cpu().numpy()  # Logits class 1
+                x = batch['pixel_values'].to(model.device)
+                y = batch['label'].cpu().numpy().squeeze()
+                outputs = model(x)  # (B, 2)
+                logits_pos = outputs[:, 1].cpu().numpy()
                 all_logits_pos.extend(logits_pos)
                 all_targets.extend(y)
 
         all_logits_pos = np.array(all_logits_pos)
         all_targets = np.array(all_targets)
-        all_probs = F.sigmoid(torch.tensor(all_logits_pos)).numpy()  # Áp sigmoid để get probs positive
+        all_probs = F.sigmoid(torch.tensor(all_logits_pos)).numpy()
 
         best_threshold = None
         best_score = 0
         results = {}
 
         for th in thresholds:
-            preds_binary = (all_probs >= th).astype(int)  # Binarize
+            preds_binary = (all_probs >= th).astype(int)
             metrics = {
                 'accuracy': accuracy_score(all_targets, preds_binary),
                 'precision': precision_score(all_targets, preds_binary, average=average, zero_division=0),
                 'recall': recall_score(all_targets, preds_binary, average=average, zero_division=0),
                 'f1': f1_score(all_targets, preds_binary, average=average, zero_division=0),
-                'confusion_matrix': confusion_matrix(all_targets, preds_binary).tolist()  # Dễ print/log
+                'confusion_matrix': confusion_matrix(all_targets, preds_binary).tolist()
             }
             score = metrics[metric_priority]
             results[th] = metrics
@@ -75,10 +75,16 @@ class TrainerWrapper:
                 best_score = score
                 best_threshold = th
 
-        print(f"Best threshold based on {metric_priority}: {best_threshold} (score: {best_score})")
-        # Optional: Log results to trainer's logger (e.g., TensorBoard)
+        print(f"Best threshold based on {metric_priority}: {best_threshold} (score: {best_score:.4f})")
+
+        # Log vào TensorBoard nếu có
         if self.trainer.logger:
-            for th, mets in results.items():
-                self.trainer.logger.experiment.add_scalar(f"threshold_{th}/{metric_priority}", mets[metric_priority])
+            loggers = self.trainer.logger
+            if not isinstance(loggers, list):
+                loggers = [loggers]
+            for logger in loggers:
+                if hasattr(logger, "experiment") and hasattr(logger.experiment, "add_scalar"):
+                    for th, mets in results.items():
+                        logger.experiment.add_scalar(f"threshold_{th}/{metric_priority}", mets[metric_priority])
 
         return best_threshold, results
