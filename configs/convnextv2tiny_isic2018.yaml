@@ -7,7 +7,8 @@ experiment:
 
 # Model configuration
 model:
-  name: ConvNeXtV2Tiny
+  name: convnextv2_tiny
+  dropout_rate: 0.2 
   loss_name: FocalLoss # Đổi sang FocalLoss
   lr: 0.00025
   weight_decay: 0.05

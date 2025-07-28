@@ -5,62 +5,51 @@ from typing import Any
 from .registry import BACKBONE
 
 class ConvNeXt(nn.Module):
-  """
-    ConvNeXt model template using timm.
-  """
-  def __init__(self, model_name: str, num_labels: int):
+  def __init__(self, model_name: str, num_labels: int, dropout_rate: float = 0.2):
     super().__init__()
-    # Sử dụng pretrained=True và set num_classes trực tiếp để load weights đúng và thay head tự động
-    self.backbone = timm.create_model(model_name, pretrained=True, num_classes=num_labels)
+    self.backbone = timm.create_model(model_name, pretrained=True, num_classes=0)
+    self.dropout = nn.Dropout(dropout_rate)
+    self.classifier = nn.Linear(self.backbone.num_features, num_labels)
 
   def forward(self, x: torch.Tensor) -> torch.Tensor:
-    logits = self.backbone(x)
-    return logits  # Trả logits, không softmax (phù hợp với BCEWithLogitsLoss)
+    x = self.backbone(x)
+    x = self.dropout(x)
+    logits = self.classifier(x)
+    return logits
 
+# Subclass registrations
 @BACKBONE.register()
 class ConvNeXtV2Tiny(ConvNeXt):
-  """
-  ConvNeXtV2Tiny model implementation using timm.
-  """
   def __init__(self, num_labels: int, *args: Any, **kwargs: Any):
-    super().__init__('convnextv2_tiny', num_labels)
+    dropout_rate = kwargs.pop("dropout_rate", 0.2)
+    super().__init__('convnextv2_tiny', num_labels, dropout_rate)
 
 @BACKBONE.register()
 class ConvNeXtV2Small(ConvNeXt):
-  """
-  ConvNeXtV2Small model implementation using timm.
-  """
   def __init__(self, num_labels: int, *args: Any, **kwargs: Any):
-    super().__init__('convnextv2_small', num_labels)
+    dropout_rate = kwargs.pop("dropout_rate", 0.2)
+    super().__init__('convnextv2_small', num_labels, dropout_rate)
 
 @BACKBONE.register()
 class ConvNeXtV2Pico(ConvNeXt):
-  """
-  ConvNeXtV2Pico model implementation using timm.
-  """
   def __init__(self, num_labels: int, *args: Any, **kwargs: Any):
-    super().__init__('convnextv2_pico', num_labels)
+    dropout_rate = kwargs.pop("dropout_rate", 0.2)
+    super().__init__('convnextv2_pico', num_labels, dropout_rate)
 
 @BACKBONE.register()
 class ConvNeXtV2Nano(ConvNeXt):
-  """
-  ConvNeXtV2Nano model implementation using timm.
-  """
   def __init__(self, num_labels: int, *args: Any, **kwargs: Any):
-    super().__init__('convnextv2_nano', num_labels)
+    dropout_rate = kwargs.pop("dropout_rate", 0.2)
+    super().__init__('convnextv2_nano', num_labels, dropout_rate)
 
 @BACKBONE.register()
 class ConvNeXtV2Base(ConvNeXt):
-  """
-  ConvNeXtV2Base model implementation using timm.
-  """
   def __init__(self, num_labels: int, *args: Any, **kwargs: Any):
-    super().__init__('convnextv2_base', num_labels)
+    dropout_rate = kwargs.pop("dropout_rate", 0.2)
+    super().__init__('convnextv2_base', num_labels, dropout_rate)
 
 @BACKBONE.register()
 class ConvNeXtV2Huge(ConvNeXt):
-  """
-  ConvNeXtV2Huge model implementation using timm.
-  """
   def __init__(self, num_labels: int, *args: Any, **kwargs: Any):
-    super().__init__('convnextv2_huge', num_labels)
+    dropout_rate = kwargs.pop("dropout_rate", 0.2)
+    super().__init__('convnextv2_huge', num_labels, dropout_rate)
