@@ -6,10 +6,8 @@ from .registry import build_model
 from loss.registry import build_loss
 from utils.metrics import MetricsLogger
 
+
 class ModelWrapper(L.LightningModule):
-  """
-  Lightning module wrapper for model training with metrics logging.
-  """
   def __init__(self, name: str="", num_labels: int=1000, lr: float=1e-4, device: str='cuda', **kwargs):
     super().__init__()
     self.lr = float(lr)
@@ -30,12 +28,15 @@ class ModelWrapper(L.LightningModule):
     
     self.save_hyperparameters()
 
+  def forward(self, x):
+    return self.model(x)
+
   def configure_optimizers(self):
     return torch.optim.AdamW(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
 
   def training_step(self, batch, batch_idx):
     x, y = batch['pixel_values'], batch['label'].long()
-    y_pred = self.model(x)
+    y_pred = self(x)
     loss = self.loss(y_pred, y)
     self.log("train_loss", loss, prog_bar=True)
     self.metrics_logger.update('train', y_pred[:,1], y.float())
@@ -43,7 +44,7 @@ class ModelWrapper(L.LightningModule):
 
   def validation_step(self, batch, batch_idx):
     x, y = batch['pixel_values'], batch['label'].long()
-    y_pred = self.model(x)
+    y_pred = self(x)
     loss = self.loss(y_pred, y)
     self.log("val_loss", loss, prog_bar=True)
     self.metrics_logger.update('val', y_pred[:,1], y.float())
@@ -51,7 +52,7 @@ class ModelWrapper(L.LightningModule):
 
   def test_step(self, batch, batch_idx):
     x, y = batch['pixel_values'], batch['label'].long()
-    y_pred = self.model(x)
+    y_pred = self(x)
     loss = self.loss(y_pred, y)
     self.log("test_loss", loss, prog_bar=True)
     self.metrics_logger.update('test', y_pred[:,1], y.float())

@@ -17,7 +17,7 @@ class ModelRegistry(Registry):
         return self.list_all()
 
 # Create global registry instance
-BACKBONE = ModelRegistry() 
+BACKBONE = ModelRegistry()
 
 def build_model(name, num_classes=2, pretrained=True, **kwargs):
     if name == 'vit_base_patch16_224':
@@ -29,6 +29,8 @@ def build_model(name, num_classes=2, pretrained=True, **kwargs):
     elif name == 'efficientnet_b0':
         model = timm.create_model(name, pretrained=pretrained, num_classes=num_classes)
     elif name == 'edgenext_small':
+        model = timm.create_model(name, pretrained=pretrained, num_classes=num_classes)
+    elif name == 'efficientvit_m5.r224_in1k':  
         model = timm.create_model(name, pretrained=pretrained, num_classes=num_classes)
     else:
         raise ValueError(f"Unknown model: {name}")
