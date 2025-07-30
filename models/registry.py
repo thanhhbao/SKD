@@ -4,35 +4,20 @@ import timm
 from utils.base_registry import Registry
 
 class ModelRegistry(Registry):
-    """
-    Registry for model classes.
-    """
     def __init__(self):
         super().__init__('ModelRegistry')
 
     def get_model(self, name: str, *args, **kwargs) -> nn.Module:
         return self.get(name, *args, **kwargs)
 
-    def list_models(self) -> list: 
+    def list_models(self) -> list:
         return self.list_all()
 
-# Create global registry instance
+# Global registry instance
 BACKBONE = ModelRegistry()
 
 def build_model(name, num_classes=2, pretrained=True, **kwargs):
-    if name == 'vit_base_patch16_224':
-        model = timm.create_model(name, pretrained=pretrained, num_classes=num_classes)
-    elif name == 'convnextv2_tiny':
-        model = timm.create_model(name, pretrained=pretrained, num_classes=num_classes)
-    elif name == 'densenet121':
-        model = timm.create_model(name, pretrained=pretrained, num_classes=num_classes)
-    elif name == 'efficientnet_b0':
-        model = timm.create_model(name, pretrained=pretrained, num_classes=num_classes)
-    elif name == 'edgenext_small':
-        model = timm.create_model(name, pretrained=pretrained, num_classes=num_classes)
-    elif name == 'efficientvit_m5.r224_in1k':  
-        model = timm.create_model(name, pretrained=pretrained, num_classes=num_classes)
-    else:
-        raise ValueError(f"Unknown model: {name}")
-    
+    model = timm.create_model(name, pretrained=pretrained, num_classes=0)  # no head
+    in_features = model.get_classifier().in_features
+    model.reset_classifier(num_classes=num_classes)  # add custom head
     return model

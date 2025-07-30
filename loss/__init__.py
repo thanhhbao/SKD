@@ -1,4 +1,9 @@
-from .registry import *
-from .base_losses import *
+from .registry import LOSS, build_loss
+from .base_losses import CrossEntropyLoss, FocalLoss  # hoặc các loss bạn cần
 
-__all__ = list(globals().keys())
+__all__ = [
+    'LOSS',
+    'build_loss',
+    'CrossEntropyLoss',
+    'FocalLoss',
+]

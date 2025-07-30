@@ -8,7 +8,7 @@ experiment:
 # Model configuration
 model:
   name: efficientvit_m5.r224_in1k
-  loss_name: FocalLoss # Đổi sang FocalLoss
+  loss_name: FocalLoss
   lr: 0.0001
   weight_decay: 0.05
   device: cuda

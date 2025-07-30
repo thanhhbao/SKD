@@ -37,8 +37,8 @@ class BinaryCrossEntropyWithLogits:
   def __call__(self, *args, **kwargs):
     return nn.functional.binary_cross_entropy_with_logits(*args, **kwargs)
   
-@LOSS.register('CrossEntropy')
-class CrossEntropy:
+@LOSS.register('CrossEntropyLoss')
+class CrossEntropyLoss:
   """
   Cross Entropy loss.
   """

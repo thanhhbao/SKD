@@ -18,14 +18,14 @@ class ModelWrapper(L.LightningModule):
     self.model = build_model(name, self.num_labels, **kwargs)
 
     # Init loss
-    loss_name = kwargs.pop('loss_name', 'FocalLoss')
+    loss_name = kwargs.pop('loss_name', 'CrossEntropyLoss')
     loss_kwargs = kwargs.pop('loss_kwargs', {})
     self.loss = build_loss(loss_name, **loss_kwargs)
 
     # Init metrics
     metrics_config = kwargs.get('_metrics_config', {})
     self.metrics_logger = MetricsLogger(metrics_config, device=device)
-    
+
     self.save_hyperparameters()
 
   def forward(self, x):
@@ -39,24 +39,27 @@ class ModelWrapper(L.LightningModule):
     y_pred = self(x)
     loss = self.loss(y_pred, y)
     self.log("train_loss", loss, prog_bar=True)
-    self.metrics_logger.update('train', y_pred[:,1], y.float())
+    self.metrics_logger.update('train', y_pred[:, 1], y.float())  # lấy logit class 1
     return {'loss': loss}
 
   def validation_step(self, batch, batch_idx):
-    x, y = batch['pixel_values'], batch['label'].long()
-    y_pred = self(x)
-    loss = self.loss(y_pred, y)
-    self.log("val_loss", loss, prog_bar=True)
-    self.metrics_logger.update('val', y_pred[:,1], y.float())
-    return {'loss': loss}
+      x, y = batch['pixel_values'], batch['label'].long()
+      y_pred = self(x)
+      loss = self.loss(y_pred, y)
+      self.log("val_loss", loss, prog_bar=True)
+      self.metrics_logger.update('val', y_pred[:, 1], y.float())  # lấy logit class 1
+      return {'loss': loss}
 
   def test_step(self, batch, batch_idx):
-    x, y = batch['pixel_values'], batch['label'].long()
-    y_pred = self(x)
-    loss = self.loss(y_pred, y)
-    self.log("test_loss", loss, prog_bar=True)
-    self.metrics_logger.update('test', y_pred[:,1], y.float())
-    return {'loss': loss}
+      x, y = batch['pixel_values'], batch['label'].long()
+      y_pred = self(x)
+      loss = self.loss(y_pred, y)
+      self.log("test_loss", loss, prog_bar=True)
+      self.metrics_logger.update('test', y_pred[:, 1], y.float())  # lấy logit class 1
+      return {'loss': loss}
+
+
+
 
   def on_train_epoch_end(self):
     self.metrics_logger.compute_and_log('train', self.log, prefix='epoch_')
