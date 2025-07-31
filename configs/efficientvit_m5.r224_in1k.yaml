@@ -1,6 +1,6 @@
 # Basic experiment settings
 experiment:
-  name: exp1
+  name: exp2
   base_output_dir: outputs
   check_val_every_n_epoch: 1
   save_top_k: 3
@@ -14,7 +14,7 @@ model:
   device: cuda
   loss_kwargs:
     alpha: [0.3, 0.7] # alpha_neg, alpha_pos #0.4 - 0.6
-    gamma: 4.0
+    gamma: 2.0
 
 # Dataset configuration
 data:
@@ -59,5 +59,7 @@ metrics:
   include_precision: true
   include_recall: true
   include_confusion_matrix: true
-  thresholds: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]  
+  thresholds: [0.1, 0.2, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7, 0.8, 0.9]
   metric_priority: f1  # Metric để chọn best (f1, accuracy, precision, recall)
+resume:
+  from_checkpoint: outputs/exp1/lightning_logs/version_0/checkpoints/epoch=6-step=2191-val_loss=0.0405.ckpt

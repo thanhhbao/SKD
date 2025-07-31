@@ -1,6 +1,7 @@
 from typing import Dict, Type, Optional
 import torch.nn as nn
 import timm
+import torch
 from utils.base_registry import Registry
 
 class ModelRegistry(Registry):
@@ -17,7 +18,15 @@ class ModelRegistry(Registry):
 BACKBONE = ModelRegistry()
 
 def build_model(name, num_classes=2, pretrained=True, **kwargs):
-    model = timm.create_model(name, pretrained=pretrained, num_classes=0)  # no head
-    in_features = model.get_classifier().in_features
-    model.reset_classifier(num_classes=num_classes)  # add custom head
+    model = timm.create_model(name, pretrained=pretrained)
+
+    # Try to reset classifier safely
+    try:
+        in_features = model.get_classifier().in_features
+        model.reset_classifier(num_classes=num_classes)
+    except (AttributeError, TypeError):
+        # For models like EfficientViT where head is handled internally
+        pass
+
     return model
+

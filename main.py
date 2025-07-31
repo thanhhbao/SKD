@@ -76,7 +76,8 @@ def main():
     data_wrapper.setup()
 
     model_wrapper = ModelWrapper(**model_config)
-    trainer = TrainerWrapper(config=config, **trainer_config)
+    checkpoint_path = config.get('resume', {}).get('from_checkpoint', None)
+    trainer = TrainerWrapper(checkpoint=checkpoint_path, config=config, **trainer_config)
 
     # Train
     trainer.fit(model_wrapper, data_wrapper.train_dataloader(), data_wrapper.val_dataloader())

@@ -61,26 +61,28 @@ class FocalLoss:
         self.reduction = reduction
 
     def __call__(self, inputs, targets):
-        if targets.dim() != 1:
-            targets = torch.argmax(targets, dim=1)
-        targets = targets.long()
+      if targets.dim() != 1:
+          targets = torch.argmax(targets, dim=1)
+      targets = targets.long()
 
-        if self.alpha.device != inputs.device:
-            self.alpha = self.alpha.to(inputs.device)
+      # Ensure alpha is on correct device and dtype
+      if self.alpha.device != inputs.device or self.alpha.dtype != inputs.dtype:
+          self.alpha = self.alpha.to(device=inputs.device, dtype=inputs.dtype)
 
-        ce_loss = F.cross_entropy(inputs, targets, reduction='none')
-        pt = torch.exp(-ce_loss)
+      ce_loss = F.cross_entropy(inputs, targets, reduction='none')
+      pt = torch.exp(-ce_loss)
 
-        if self.alpha.dim() > 0:  # alpha for each class
-            alpha_t = self.alpha[targets]
-        else:
-            alpha_t = self.alpha
+      if self.alpha.dim() > 0:  # alpha for each class
+          alpha_t = self.alpha[targets]
+      else:
+          alpha_t = self.alpha
 
-        focal_loss = alpha_t * (1 - pt) ** self.gamma * ce_loss
+      focal_loss = alpha_t * (1 - pt) ** self.gamma * ce_loss
 
-        if self.reduction == 'mean':
-            return focal_loss.mean()
-        elif self.reduction == 'sum':
-            return focal_loss.sum()
-        else:
-            return focal_loss
+      if self.reduction == 'mean':
+          return focal_loss.mean()
+      elif self.reduction == 'sum':
+          return focal_loss.sum()
+      else:
+          return focal_loss
+
