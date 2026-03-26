@@ -4,16 +4,18 @@ import torch.nn.functional as F
 
 from .registry import LOSS
 
-@LOSS.register('MSE')
-class MSE:
-  """
-  Mean Squared Error loss.
-  """
-  def __init__(self, *args, **kwargs):
-    pass
+if 'MSE' not in LOSS._registry:
+    @LOSS.register('MSE')
+    class MSE:
+        """
+        Mean Squared Error loss.
+        """
+        def __init__(self, *args, **kwargs):
+            pass
 
-  def __call__(self, *args, **kwargs):
-    return nn.functional.mse_loss(*args, **kwargs)
+        def __call__(self, *args, **kwargs):
+            return nn.functional.mse_loss(*args, **kwargs)
+
 
 @LOSS.register('BinaryCrossEntropy')
 class BinaryCrossEntropy:
@@ -49,40 +51,40 @@ class CrossEntropyLoss:
     return nn.functional.cross_entropy(*args, **kwargs)
 
 @LOSS.register('FocalLoss')
-class FocalLoss:
-    def __init__(self, alpha=1.0, gamma=4.0, reduction='mean'):
+class FocalLoss(nn.Module):
+  def __init__(self, alpha=1.0, gamma=2.0, reduction='mean'):
+        super().__init__()
         if isinstance(alpha, (float, int)):
-            self.alpha = torch.tensor(alpha, dtype=torch.float32, requires_grad=False)
+            self.alpha = torch.tensor([alpha, 1 - alpha], dtype=torch.float32)
         elif isinstance(alpha, list):
-            self.alpha = torch.tensor(alpha, dtype=torch.float32, requires_grad=False)
+            self.alpha = torch.tensor(alpha, dtype=torch.float32)
         else:
             raise TypeError("alpha must be float or list")
         self.gamma = gamma
         self.reduction = reduction
 
-    def __call__(self, inputs, targets):
-      if targets.dim() != 1:
-          targets = torch.argmax(targets, dim=1)
-      targets = targets.long()
+  def forward(self, inputs, targets):
+        if targets.dim() != 1:
+            targets = torch.argmax(targets, dim=1)
+        targets = targets.long()
 
-      # Ensure alpha is on correct device and dtype
-      if self.alpha.device != inputs.device or self.alpha.dtype != inputs.dtype:
-          self.alpha = self.alpha.to(device=inputs.device, dtype=inputs.dtype)
+        # Ensure alpha on correct device/dtype
+        self.alpha = self.alpha.to(inputs.device).type_as(inputs)
 
-      ce_loss = F.cross_entropy(inputs, targets, reduction='none')
-      pt = torch.exp(-ce_loss)
+        ce_loss = F.cross_entropy(inputs, targets, reduction='none')
+        pt = torch.exp(-ce_loss)
 
-      if self.alpha.dim() > 0:  # alpha for each class
-          alpha_t = self.alpha[targets]
-      else:
-          alpha_t = self.alpha
+        # Avoid NaN by clamping pt
+        pt = pt.clamp(min=1e-6, max=1.0)
 
-      focal_loss = alpha_t * (1 - pt) ** self.gamma * ce_loss
+        alpha_t = self.alpha[targets]
+        loss = alpha_t * (1 - pt) ** self.gamma * ce_loss
 
-      if self.reduction == 'mean':
-          return focal_loss.mean()
-      elif self.reduction == 'sum':
-          return focal_loss.sum()
-      else:
-          return focal_loss
+        # Final reduction
+        if self.reduction == 'mean':
+            return torch.nanmean(loss)
+        elif self.reduction == 'sum':
+            return torch.nansum(loss)
+        return loss
+
 

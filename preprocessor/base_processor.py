@@ -40,14 +40,16 @@ class BasicImagePreprocessor(BasePreprocessor):
     
     # Training transforms with some augmentation
     self.train_transform = T.Compose([
-      # T.Resize((self.image_size, self.image_size)),
-      T.RandomResizedCrop(self.image_size),
-      T.RandomHorizontalFlip(),
-      T.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
-      T.RandomAffine(degrees=5, translate=(0.05, 0.05), scale=(0.95, 1.05)),
+      T.RandomResizedCrop(self.image_size, scale=(0.8, 1.0)),
+      T.RandomHorizontalFlip(p=0.5),
+      T.RandomVerticalFlip(p=0.2),  # thêm flip dọc để tăng diversity
+      T.RandomRotation(degrees=15),  # tăng nhẹ rotation
+      T.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.2, hue=0.02),
+      T.RandomAffine(degrees=5, translate=(0.1, 0.1), scale=(0.9, 1.1)),  # tăng translate & scale
       T.ToTensor(),
       normalize,
-    ])
+])
+
     
     # Validation transforms (no augmentation)
     self.val_transform = T.Compose([

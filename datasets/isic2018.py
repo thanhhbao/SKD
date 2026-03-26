@@ -37,6 +37,8 @@ class ISIC2018Dataset(Dataset):
       **kwargs: Additional arguments
     """
     self.df = pd.read_csv(csv_path)
+    self.csv_path = csv_path
+    self.df.columns = self.df.columns.map(lambda col: str(col).replace('\ufeff', '').strip())
     self.img_dir = img_dir
     self.img_path_col = img_path_col
     self.target_col = target_col
@@ -44,6 +46,27 @@ class ISIC2018Dataset(Dataset):
     self.img_size = img_size
     self.is_train = False
     self.transform = self.setup_transform(transform)
+
+    self._validate_required_columns()
+
+  def _validate_required_columns(self) -> None:
+    missing_cols = []
+
+    if self.img_path_col not in self.df.columns:
+      missing_cols.append(self.img_path_col)
+
+    if isinstance(self.target_col, list):
+      missing_cols.extend([col for col in self.target_col if col not in self.df.columns])
+    elif isinstance(self.target_col, str) and self.target_col not in self.df.columns:
+      missing_cols.append(self.target_col)
+
+    if missing_cols:
+      available_cols = ', '.join([repr(col) for col in self.df.columns.tolist()])
+      missing_cols = ', '.join([repr(col) for col in dict.fromkeys(missing_cols)])
+      raise KeyError(
+        f"Missing columns in CSV '{self.csv_path}': {missing_cols}. "
+        f"Available columns: [{available_cols}]"
+      )
   
   def setup_transform(self, transform: Callable=None) -> Callable:
     if transform:
@@ -59,21 +82,6 @@ class ISIC2018Dataset(Dataset):
     """
     return len(self.df)
   
-  #def get_label(self, idx):
-    label = [1, 0]
-    # handle if target_col contains multiple cols (multi-label case)
-    if isinstance(self.target_col, list):
-      for tc in self.target_col:
-        cur_label = self.df.iloc[idx][tc]
-        if cur_label > 0.:
-          label = [0, 1]
-          return label
-    elif isinstance(self.target_col, str):
-      label = [0, 1] if self.df.iloc[idx][self.target_col] > 0 else [0, 1]
-    else: 
-      raise Exception(f'Invalid target column. Please check config file.')
-
-    return label#
   def get_label(self, idx):
     label = 0
     if isinstance(self.target_col, list):
@@ -102,7 +110,8 @@ class ISIC2018Dataset(Dataset):
     if torch.is_tensor(idx):
       idx = idx.tolist()
     
-    img_path = os.path.join(self.img_dir, f'{self.df.iloc[idx][self.img_path_col]}.{self.img_ext}')
+    image_id = self.df.iloc[idx][self.img_path_col]
+    img_path = os.path.join(self.img_dir, f'{image_id}.{self.img_ext}')
     image = Image.open(img_path).convert('RGB')
 
     # transformation

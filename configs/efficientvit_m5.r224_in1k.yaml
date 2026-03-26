@@ -13,7 +13,7 @@ model:
   weight_decay: 0.05
   device: cuda
   loss_kwargs:
-    alpha: [0.3, 0.7] # alpha_neg, alpha_pos #0.4 - 0.6
+    alpha: [0.25, 0.75] # alpha_neg, alpha_pos #0.4 - 0.6
     gamma: 2.0
 
 # Dataset configuration
@@ -59,7 +59,9 @@ metrics:
   include_precision: true
   include_recall: true
   include_confusion_matrix: true
-  thresholds: [0.1, 0.2, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7, 0.8, 0.9]
+  thresholds: [0.65]
   metric_priority: f1  # Metric để chọn best (f1, accuracy, precision, recall)
 resume:
   from_checkpoint: outputs/exp1/lightning_logs/version_0/checkpoints/epoch=6-step=2191-val_loss=0.0405.ckpt
+
+encoder, thử nghiệm hàm loss, tool parameters, kết quả,gắn ONNX,

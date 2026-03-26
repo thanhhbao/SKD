@@ -53,7 +53,7 @@ class ModelWrapper(L.LightningModule):
         x, y = batch['pixel_values'], batch['label'].long()
         y_pred = self(x)
         loss = self.loss(y_pred, y)
-        self.log("train_loss", loss, prog_bar=True)
+        self.log("train_loss", loss, on_step=False, on_epoch=True, prog_bar=False, logger=True)
         self.metrics_logger.update('train', y_pred[:, 1], y.float())  # Use logit of class 1
         return {'loss': loss}
 
@@ -61,7 +61,7 @@ class ModelWrapper(L.LightningModule):
         x, y = batch['pixel_values'], batch['label'].long()
         y_pred = self(x)
         loss = self.loss(y_pred, y)
-        self.log("val_loss", loss, prog_bar=True)
+        self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=False, logger=True)
         self.metrics_logger.update('val', y_pred[:, 1], y.float())
         return {'loss': loss}
 
@@ -69,7 +69,7 @@ class ModelWrapper(L.LightningModule):
         x, y = batch['pixel_values'], batch['label'].long()
         y_pred = self(x)
         loss = self.loss(y_pred, y)
-        self.log("test_loss", loss, prog_bar=True)
+        self.log("test_loss", loss, on_step=False, on_epoch=True, prog_bar=False, logger=True)
         self.metrics_logger.update('test', y_pred[:, 1], y.float())
         return {'loss': loss}
 

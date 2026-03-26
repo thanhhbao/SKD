@@ -80,7 +80,7 @@ class ISIC2016Dataset(Dataset):
     image = self.transform(image, self.is_train)
     
     label = self.df.iloc[idx][self.target_col]
-    label = int(label == 'malignent') if isinstance(label, str) else int(label)
+    label = int(label == 'malignant') if isinstance(label, str) else int(label)
     label = [1, 0] if label == 0 else [0, 1]
 
     return {'pixel_values': image, 'label': torch.tensor(label, dtype=torch.float)}
